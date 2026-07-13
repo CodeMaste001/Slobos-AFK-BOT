@@ -327,9 +327,9 @@ function addInterval(callback, delay) {
 }
 
 function getReconnectDelay() {
-  const baseDelay = config.utils['auto-reconnect-delay'] || 2000;
-  const maxDelay = config.utils['max-reconnect-delay'] || 15000;
-  const delay = Math.min(baseDelay + (botState.reconnectAttempts * 1000), maxDelay);
+  const baseDelay = 5000; // 5 seconds base delay
+  const maxDelay = 60000; // 1 minute max delay
+  const delay = Math.min(baseDelay + (botState.reconnectAttempts * 5000), maxDelay);
   return delay;
 }
 
@@ -362,54 +362,6 @@ function createBot() {
     }
     console.log(`[Debug] ✅ DNS resolved: ${config.server.ip} → ${address} (IPv${family})`);
 
-    // First, test with direct minecraft-protocol to see what's happening
-    console.log('[Debug] Testing direct minecraft-protocol connection...');
-    const testClient = mc.createClient({
-      host: config.server.ip,
-      port: config.server.port,
-      username: config['bot-account'].username,
-      auth: config['bot-account'].type === 'microsoft' ? 'microsoft' : 'offline',
-      version: config.server.version,
-    });
-
-    testClient.on('connect', () => console.log('[Debug] ✅ Test client: TCP connected!'));
-    testClient.on('error', (err) => console.error('[Debug] ❌ Test client error:', err.stack || err));
-    testClient.on('close', (hadError) => console.log(`[Debug] ❌ Test client closed, hadError: ${hadError}`));
-    testClient.on('disconnect', (packet) => console.log('[Debug] ❌ Test client disconnected:', packet));
-    testClient.on('connect_allowed', () => console.log('[Debug] ✅ Test client: connect allowed!'));
-    testClient.on('success', () => console.log('[Debug] ✅ Test client: login success!'));
-    testClient.on('state', (newState) => console.log(`[Debug] Test client state: ${newState}`));
-    testClient.on('packet', (data, meta) => console.log(`[Debug] Test client got packet: ${meta.name}`));
-
-    // Timeout for test client
-    const testTimeout = setTimeout(() => {
-      console.log('[Debug] ❌ Test client timeout! No events received.');
-      testClient.end();
-      scheduleReconnect();
-    }, 30000);
-
-    // If test works, then use mineflayer
-    testClient.once('success', () => {
-      clearTimeout(testTimeout);
-      console.log('[Debug] Test succeeded! Now creating mineflayer bot...');
-      testClient.end();
-      startMineflayerBot();
-    });
-
-    // If test fails, schedule reconnect
-    testClient.once('error', (err) => {
-      clearTimeout(testTimeout);
-      console.error('[Debug] Test client failed! Scheduling reconnect...');
-      testClient.end();
-      scheduleReconnect();
-    });
-
-    testClient.once('close', () => {
-      clearTimeout(testTimeout);
-    });
-  });
-
-  function startMineflayerBot() {
     try {
       bot = mineflayer.createBot({
         username: config['bot-account'].username,
@@ -437,9 +389,6 @@ function createBot() {
       bot.on('health', () => console.log('[Debug] Bot health updated'));
       bot.on('playerJoined', (player) => console.log('[Debug] Player joined:', player.username));
       bot.on('playerLeft', (player) => console.log('[Debug] Player left:', player.username));
-      bot._client.on('packet', (packet, metadata) => {
-        console.log(`[Debug] Received packet: ${metadata.name}`);
-      });
 
       bot.loadPlugin(pathfinder);
 
@@ -522,6 +471,11 @@ function createBot() {
           sendDiscordWebhook(`[!] **Kicked**: ${reason}`, 0xff0000);
         }
 
+        // If kicked for throttling, wait longer before reconnecting
+        if (reason && reason.includes('throttled')) {
+          botState.reconnectAttempts += 5; // Add extra delay
+        }
+
         if (config.utils['auto-reconnect']) {
           scheduleReconnect();
         }
@@ -536,7 +490,7 @@ function createBot() {
       console.log(`[Bot] Failed to create bot:`, err.stack || err);
       scheduleReconnect();
     }
-  }
+  });
 }
 
 function scheduleReconnect() {
