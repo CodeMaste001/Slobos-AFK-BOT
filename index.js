@@ -407,6 +407,7 @@ function createBot() {
         isReconnecting = false;
 
         console.log(`[Bot] [+] Successfully spawned on server!`);
+        bot.chat("klk mi gente");
         if (config.discord && config.discord.events.connect) {
           sendDiscordWebhook(`[+] **Connected** to \`${config.server.ip}\``, 0x4ade80);
         }
