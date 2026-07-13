@@ -715,15 +715,10 @@ function initializeModules(bot, mcData, defaultMove) {
       if (!bot || username === bot.username) return;
 
       try {
-        if (config.chat.respond) {
-          const lowerMsg = message.toLowerCase();
-          if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
-            bot.chat(`Hello, ${username}!`);
-          }
-          if (message.startsWith('!tp ') && config.chat.respond) {
-            const target = message.split(' ')[1];
-            if (target) bot.chat(`/tp ${target}`);
-          }
+        if (config.chat.respond && message.startsWith('!tp')) {
+          const parts = message.split(' ');
+          const target = parts[1] || username;
+          if (target) bot.chat(`/tp ${target}`);
         }
       } catch (e) {
         console.log('[Chat] Error:', e.message);
