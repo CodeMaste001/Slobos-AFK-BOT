@@ -379,12 +379,23 @@ function createBot() {
       skipValidation: false // Ensure we validate everything
     });
 
-    // Add debug events to see what's happening
-    bot.on('connect', () => {
-      console.log('[Debug] Bot connected to server!');
-    });
-    bot.on('login', () => {
-      console.log('[Debug] Bot logged in! Waiting for spawn...');
+    // Add ALL debug events to see what's happening
+    bot.on('connect', () => console.log('[Debug] ✅ Bot connected to server (TCP connection established)!'));
+    bot.on('login', () => console.log('[Debug] ✅ Bot logged in! Waiting for spawn...'));
+    bot.on('spawn', () => console.log('[Debug] ✅ Bot spawned successfully!'));
+    bot.on('disconnect', (packet) => console.log('[Debug] ❌ Bot disconnected:', packet?.reason || packet));
+    bot.on('kicked', (reason) => console.log('[Debug] ❌ Bot kicked:', reason));
+    bot.on('error', (err) => console.error('[Debug] ❌ Bot error:', err.stack || err.message || err));
+    bot.on('message', (message) => console.log('[Debug] Server message:', message.toAnsi()));
+    bot.on('health', () => console.log('[Debug] Bot health updated'));
+    bot.on('playerJoined', (player) => console.log('[Debug] Player joined:', player.username));
+    bot.on('playerLeft', (player) => console.log('[Debug] Player left:', player.username));
+    bot.on('time', () => {}); // Just to track, no spam
+    bot._client.on('packet', (packet, metadata) => {
+      // Log first few packets so we can see if anything is arriving
+      if (botState.reconnectAttempts === 0) {
+        console.log(`[Debug] Received packet: ${metadata.name}`);
+      }
     });
 
     bot.loadPlugin(pathfinder);
