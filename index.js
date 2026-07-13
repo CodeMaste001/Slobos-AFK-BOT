@@ -371,8 +371,9 @@ function createBot() {
         port: config.server.port,
         version: config.server.version,
         hideErrors: false,
-        checkTimeoutInterval: 120000,
-        skipValidation: false
+        checkTimeoutInterval: 240000,
+        skipValidation: false,
+        timeout: 240000
       });
 
       bot._client.on('error', (err) => console.error('[Debug] ❌ Client error:', err.stack || err));
@@ -397,7 +398,7 @@ function createBot() {
           console.log('[Bot] Connection timeout - no spawn received');
           scheduleReconnect();
         }
-      }, 60000);
+      }, 180000);
 
       bot.once('spawn', () => {
         clearTimeout(connectionTimeout);
