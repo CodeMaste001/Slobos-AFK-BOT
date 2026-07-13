@@ -327,9 +327,9 @@ function addInterval(callback, delay) {
 }
 
 function getReconnectDelay() {
-  const baseDelay = 5000; // 5 seconds base delay
-  const maxDelay = 60000; // 1 minute max delay
-  const delay = Math.min(baseDelay + (botState.reconnectAttempts * 5000), maxDelay);
+  const baseDelay = 10000; // 10 seconds base delay
+  const maxDelay = 120000; // 2 minutes max delay
+  const delay = Math.min(baseDelay + (botState.reconnectAttempts * 10000), maxDelay);
   return delay;
 }
 
@@ -485,6 +485,9 @@ function createBot() {
       bot.on('error', (err) => {
         console.log(`[Bot] Error: ${err.message}`);
         botState.errors.push({ type: 'error', message: err.message, time: Date.now() });
+        if (config.utils['auto-reconnect']) {
+          scheduleReconnect();
+        }
       });
 
     } catch (err) {
