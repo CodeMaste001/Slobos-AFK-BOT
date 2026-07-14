@@ -2,6 +2,10 @@ const mineflayer = require('mineflayer');
 const { Movements, pathfinder, goals } = require('mineflayer-pathfinder');
 const { GoalBlock } = goals;
 const config = require('./settings.json');
+
+// Override server IP/port from environment secrets if set
+if (process.env.SERVER_IP) config.server.ip = process.env.SERVER_IP;
+if (process.env.SERVER_PORT) config.server.port = parseInt(process.env.SERVER_PORT, 10);
 const express = require('express');
 const http = require('http');
 const dns = require('dns');

@@ -6,8 +6,8 @@
     "type": "offline"
   },
   "server": {
-    "ip": "LHMF.aternos.me",
-    "port": 31963,
+    "ip": "",
+    "port": 0,
     "version": "1.21.11"
   },
   "position": {
