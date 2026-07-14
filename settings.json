@@ -1,14 +1,14 @@
 {
   "name": "AFK Bot",
   "bot-account": {
-    "username": "core",
+    "username": "Core",
     "password": "",
     "type": "offline"
   },
   "server": {
     "ip": "LHMF.aternos.me",
     "port": 31963,
-    "version": false
+    "version": "1.21.11"
   },
   "position": {
     "enabled": true,
@@ -26,7 +26,7 @@
       "sneak": true
     },
     "chat-messages": {
-      "enabled": true,
+      "enabled": false,
       "repeat": true,
       "repeat-delay": 500,
       "messages": [
@@ -78,11 +78,11 @@
     "place-night": true
   },
   "discord": {
-    "enabled": true,
-    "webhookUrl": "https://discord.com/api/webhooks/1472567640521183243/7DzSIaCSM_9-5DjzrlAuP9Tdj7Y3yAP6BHg3scKzhaRFdVk8ctWBlhOc7I8l5xC6Nqm3",
+    "enabled": false,
+    "webhookUrl": "",
     "events": {
-      "connect": true,
-      "disconnect": true,
+      "connect": false,
+      "disconnect": false,
       "chat": false
     }
   },
