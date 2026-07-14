@@ -327,9 +327,10 @@ function addInterval(callback, delay) {
 }
 
 function getReconnectDelay() {
-  const baseDelay = 10000; // 10 seconds base delay
-  const maxDelay = 120000; // 2 minutes max delay
-  const delay = Math.min(baseDelay + (botState.reconnectAttempts * 10000), maxDelay);
+  const baseDelay = 30000; // 30 seconds base delay
+  const maxDelay = 300000; // 5 minutes max delay
+  const jitter = Math.random() * 10000; // Add up to 10 seconds of random jitter
+  const delay = Math.min(baseDelay + (botState.reconnectAttempts * 30000), maxDelay) + jitter;
   return delay;
 }
 
