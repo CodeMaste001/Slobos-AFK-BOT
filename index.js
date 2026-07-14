@@ -474,9 +474,26 @@ function createBot() {
           sendDiscordWebhook(`[!] **Kicked**: ${reason}`, 0xff0000);
         }
 
+        // Aternos queue / server starting — wait longer before retrying
+        const reasonStr = (typeof reason === 'string' ? reason : JSON.stringify(reason) || '').toLowerCase();
+        if (
+          reasonStr.includes('starting') ||
+          reasonStr.includes('queue') ||
+          reasonStr.includes('please wait') ||
+          reasonStr.includes('en cola') ||
+          reasonStr.includes('iniciando')
+        ) {
+          console.log('[Aternos] Server is starting / in queue — waiting 90s before retry...');
+          botState.reconnectAttempts = 0; // reset so backoff stays short for later
+          if (config.utils['auto-reconnect']) {
+            setTimeout(() => { isReconnecting = false; createBot(); }, 90000);
+          }
+          return;
+        }
+
         // If kicked for throttling, wait longer before reconnecting
-        if (reason && reason.includes('throttled')) {
-          botState.reconnectAttempts += 5; // Add extra delay
+        if (reasonStr.includes('throttled')) {
+          botState.reconnectAttempts += 5;
         }
 
         if (config.utils['auto-reconnect']) {
@@ -716,18 +733,42 @@ function initializeModules(bot, mcData, defaultMove) {
   }
 
   if (config.modules.chat) {
-    bot.on('chat', (username, message) => {
-      if (!bot || username === bot.username) return;
+    // In 1.19+ / offline / ViaVersion servers the `chat` event often doesn't
+    // fire for player messages — parse messagestr instead.
+    const _seenChatIds = new Set();
+
+    function handlePlayerCommand(username, message) {
+      if (!bot || !botState.connected) return;
+      if (username === bot.username) return;
+
+      // Deduplicate: same username+message within 500ms fires from both events
+      const key = `${username}:${message}`;
+      if (_seenChatIds.has(key)) return;
+      _seenChatIds.add(key);
+      setTimeout(() => _seenChatIds.delete(key), 500);
 
       try {
         if (config.chat.respond && message.startsWith('!tp')) {
-          const parts = message.split(' ');
+          const parts = message.trim().split(/\s+/);
           const target = parts[1] || username;
-          if (target) bot.chat(`/tp ${target}`);
+          console.log(`[Chat] !tp from ${username} → /tp ${target}`);
+          bot.chat(`/tp ${target}`);
         }
       } catch (e) {
         console.log('[Chat] Error:', e.message);
       }
+    }
+
+    // Primary handler for 1.21 / ViaVersion / offline servers
+    bot.on('messagestr', (message) => {
+      // Player chat looks like: <username> text
+      const match = message.match(/^<([^>]+)>\s+(.+)$/);
+      if (match) handlePlayerCommand(match[1], match[2]);
+    });
+
+    // Fallback for older server versions where chat event still works
+    bot.on('chat', (username, message) => {
+      handlePlayerCommand(username, message);
     });
   }
 
