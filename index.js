@@ -822,8 +822,8 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 process.on('SIGTERM', () => {
-  console.log('[System] SIGTERM received.');
-  process.exit(0);
+  console.log('[System] SIGTERM received. Keeping bot alive...');
+  // Don't exit immediately to keep Render from killing the bot prematurely
 });
 
 process.on('SIGINT', () => {
