@@ -453,7 +453,6 @@ function createBot() {
       });
 
       bot.on('end', (reason) => {
-        const wasSpawned = botState.connected;
         console.log(`[Bot] Disconnected: ${reason || 'Unknown reason'}`);
         botState.connected = false;
         clearAllIntervals();
@@ -463,7 +462,18 @@ function createBot() {
         }
 
         if (config.utils['auto-reconnect']) {
-          scheduleReconnect();
+          // Intentional leave (periodic rejoin) — reconnect fast so Aternos
+          // doesn't shut the server down while the bot is away
+          if (reason === 'disconnect.quitting' || reason === 'Periodic Rejoin') {
+            console.log('[Bot] Intentional leave — reconnecting in 3s...');
+            isReconnecting = true;
+            reconnectTimeout = setTimeout(() => {
+              isReconnecting = false;
+              createBot();
+            }, 3000);
+          } else {
+            scheduleReconnect();
+          }
         }
       });
 
